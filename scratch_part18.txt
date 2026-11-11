@@ -1,0 +1,55 @@
+Part 18 · Phased build plan
+○	Part 19 · Acceptance criteria and QA checklist
+○	Part 20 · Your first response
+Appendix A
+●	— Content & learning feature audit (the full per-page, per-form, per-URL evidence)
+Appendix B
+●	— Commerce, course, test-series & account audit
+Appendix C
+●	— Tech stack, SEO & admin-panel reconstruction
+How the appendices work. Parts 0–20 are the instructions. Appendices A–C are the evidence base: the exhaustive raw inventory, with exact URL patterns, form field names, prices, headers and observed defects. If you need to check a behaviour, resolve an ambiguity, or see the full field list of a form, the answer is in the appendix — treat it as the source of truth. Nothing in the appendices needs to be re-verified by browsing.
+Evidence standard used throughout. Every fact about the reference site was verified on 18 September 2026 by anonymous read-only inspection of public pages: HTML source, HTTP response headers, cookies, /sitemap.xml (32,570 URLs), /robots.txt, the RSS feed, asset paths, and form markup. Capabilities that sit behind authentication (the admin console internals, the student dashboard, the quiz attempt screen, the payment gateway) were not observable and are therefore specified as requirements to build — never presented as observed behaviour. Those items are labelled [INFERRED] or written as specification. No private system was accessed, authenticated against, or exploited at any point.
+ 
+PART 0 — INSTRUCTIONS TO THE BUILDING AI
+You are a senior full-stack architect and product engineer. Your task is to build production-ready software, not a mockup, not a landing page, and not a static prototype. Follow these rules:
+Build the whole platform, in the architecture given here.
+1. Do not silently simplify the scope. If something must be deferred, say so explicitly in your response and list it under "Deferred".
+Ask at most 5 clarifying questions
+2. , then start building. Prefer sensible defaults plus a stated assumption over blocking.
+Working code over prose.
+3. Every feature listed in Parts 3–12 must result in actual routes, controllers/services, models, migrations, views/components, API endpoints, and tests. A feature is "done" only when a user can perform it end-to-end.
+Everything CMS-driven.
+4. Any content in this specification — articles, menus, homepage slots, pricing tables, quizzes, downloads, centres, toppers, banners, notification tickers, footer links — must be editable by a non-technical admin through the admin panel. Hard-coded content in templates is a defect.
+Bilingual from day one.
+5. English and Hindi are both first-class locales with separate URLs, separate slugs, separate content records, separate homepages, and separate media folders. Never implement translation as a UI string-toggle over a single content record.
+SEO is a functional requirement, not a phase-2 nice-to-have.
+6. Server-rendered HTML, correct status codes, structured data, canonical and hreflang tags, sitemaps, and feeds are acceptance criteria.
+Accessibility and performance are acceptance criteria
+7. , with the specific measurable targets in Part 15.
+Do not replicate the reference site's defects.
+8. Part 18 lists confirmed anti-patterns you must not copy. Read it before you write code.
+Build in the phases of Part 19
+9. , and at the end of each phase produce: a migration/seed set, a route list, a screenshot-able working flow, and a short changelog.
+Output format for your responses:
+10. (a) architecture decisions, (b) file tree, (c) the code, (d) how to run it locally, (e) what is deferred. Keep commentary tight.
+ 
+PART 1 — PRODUCT BRIEF (the target)
+Build an exam-preparation education platform for a large competitive-exam coaching brand. The reference product serves millions of aspirants preparing for a national civil-services examination and a family of state-level examinations. It has three distinct surfaces that must be built as one coherent product.
+1.1 The three surfaces
+Surface	Primary user	Purpose
+A. Public content portal	Anonymous visitor, search-engine crawler	Publish a very high volume of daily study content; capture leads; rank in search; drive traffic to the app/LMS and to paid programmes
+B. Student LMS / app	Registered & paid student	Sell and deliver courses, test series and books; deliver video classes; run timed tests; show performance analytics
+C. Admin back-office	Editorial staff, faculty, sales counsellors, finance, super-admin	Author and publish all content in two languages; build quizzes and tests; manage users, orders, leads, centres, exams, reports, and site configuration
+A fourth surface, D. Marketing/lead-gen funnels (counselling booking, slot booking, webinar registration, open-mock-test registration, careers), is spread across A and C.
+1.2 The core business loop you are building software for
+   Daily free content  ──►  organic search traffic  ──►  lead capture (newsletter / SMS / counselling)
+            │                                                          │
+            │                                                          ▼
+            └──►  free quizzes ──►  login ──►  free mock test ──►  sales counselling  ──►  PAID course / test series / book
+                                                                                                │
+                                                                                                ▼
+                                                                            LMS delivery: video classes, timed tests,
+                                                                            evaluated answer copies, performance analytics
+                                                                                                │
+                                                                                                ▼
+                                                                            Retention: notifications, analytics, renewals

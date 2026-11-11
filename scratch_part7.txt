@@ -1,0 +1,145 @@
+PART 7 — QUIZ / TEST ATTEMPT ENGINE (the student-facing experience)
+The reference promotes a daily quiz in its ticker and RSS every single day and shows a duration on every quiz card ("Time : 5 min"), but its attempt screen sits behind login and could not be observed. The following is therefore a specification you must implement, modelled on the standard pattern used by Indian competitive-exam platforms. Treat it as a first-class product, not a form with radio buttons.
+7.1 Pre-attempt screen
+Display: quiz title, category, language, number of questions, total marks, marks per correct answer, negative marking per wrong answer, duration, instructions, the marking scheme, and the rules (whether you can navigate freely, whether you can review, whether the key will be shown). Show a "Start Test" button and, if the user is not eligible, an explanatory message with the exact action needed (log in / purchase / window not open yet, with the opening time).
+7.2 Attempt screen
+Header bar (always visible):
+●	quiz title, a
+countdown timer
+, a progress indicator (answered / total), a question navigator toggle, and a submit button.
+Timer:
+●	server-authoritative. The server records
+started_at
+and the allowed duration; the client renders the countdown from server time;
+auto-submit on expiry from the server side
+even if the browser is closed. Warn at 5 minutes and 1 minute remaining. Never trust the client timer.
+Question area:
+●	question number, stem (rendering bilingual content in the selected locale, with devanagari support), optional image/diagram, options with radio (single-correct) or checkbox (multiple-correct) controls, and "clear response".
+Actions per question:
+●	Save & Next, Mark for Review, Mark for Review & Next, Clear Response, Previous, Next, and Save & Submit.
+Question palette:
+●	a grid of numbered buttons with distinct colour states — not visited, not answered, answered, marked for review, answered & marked for review — plus per-state counts. Clicking a number jumps to that question. On mobile, the palette becomes a slide-up sheet.
+Section navigation
+●	for multi-section papers (e.g. a GS section and a CSAT section) with per-section timing if the pattern requires it.
+Keyboard shortcuts
+●	and full keyboard accessibility: arrow keys to move,
+1
+–
+4
+to select an option,
+M
+to mark,
+S
+to save.
+Resilience:
+●	autosave every answer to the server (or to local storage with periodic sync) so that a lost connection or a crashed browser does not lose the attempt; on reload, restore the exact state with the correct remaining time. Detect and handle a second concurrent session (single active session policy).
+Instructions/help
+●	accessible in a modal at any point.
+Anti-cheating controls (configurable per test):
+●	disable copy/paste and right-click, log tab-switch/blur events with a count, optional full-screen enforcement, optional webcam proctoring snapshot for premium series, and an integrity report attached to the attempt.
+Bilingual toggle
+●	available inside the attempt if the paper is bilingual.
+Accessibility:
+●	high-contrast mode, adjustable font size, and screen-reader-compatible markup.
+7.3 Submission screen
+Show a summary grouped by state ("You have answered X, marked Y for review, and left Z unanswered"), a warning for unanswered questions, and a final confirm. Then a processing state, then redirect to the result.
+7.4 Result screen
+Scorecard:
+●	score, maximum marks, percentage, correct count, incorrect count, unattempted count,
+marks lost to negative marking
+, accuracy %, time taken, average time per question, and a comparison against the cohort (average, topper, percentile, and All-India Rank once published).
+Section/topic-wise breakdown
+●	as a table and a chart: attempted, correct, incorrect, accuracy, and marks per subject and per topic — this drives the "what to revise" recommendation.
+Question-wise review:
+●	every question with the student's answer, the correct answer, the explanation, and the source reference; filterable to wrong-only or marked-only; with the option to add a question to a personal "revision list".
+Solution video / model-answer link
+●	if published.
+Share/scorecard download
+●	as a PDF and by email.
+Re-attempt
+●	if the quiz policy allows, showing both attempts side by side.
+Rank publication:
+●	display "ranks will be published on " and then reveal the rank, percentile, and cohort statistics; recompute after any answer-key revision.
+Retention hook:
+●	"Your weak topics this week" summary plus a CTA to the relevant course or content.
+7.5 Subjective / mains answer-writing flow
+For mains answer-writing practice: present the question with word limit and time guidance, provide a rich-text answer editor with a word counter, autosave drafts, allow image/scan upload of a handwritten answer, submit for evaluation, and then show an evaluated copy with per-question marks, the model answer, and examiner comments. Track the student's improvement over attempts.
+ 
+PART 8 — COMMERCE & PAYMENT ARCHITECTURE
+8.1 The architectural decision (restate it in your output)
+Implement one of the two options from Part 2.2 and document the choice and its consequences. Whatever you choose, the following must hold:
+A single identity
+1. — one account works across content, LMS and store (SSO/token exchange, not two unrelated account tables).
+Attribution is preserved
+2. — the content page's UTM parameters, referrer, and (if captured) lead id travel with the user into the catalogue and are stored on the order. The reference loses this link; you must not.
+Server-side pricing
+3. — the price is always recomputed on the server from the catalogue at checkout time. Never trust a price posted from the browser.
+Idempotency
+4. — every order creation and every payment callback is idempotent, keyed by a generated order reference.
+8.2 Catalogue model
+Product
+●	(course, test series, book, merchandise, DLP/study material, magazine subscription) with type, category, medium, language, validity, format, and tax class.
+Variant
+●	for the sellable unit (e.g. the same course in Hindi / English / Bilingual; the same series in Package I / II / III; a book's paperback vs hardcover).
+Price
+●	with MRP, sale price, discount %, and a scheduled campaign window.
+Entitlements
+●	granted by a product:
+course_access
+,
+test_series_access
+,
+download_access
+,
+book_shipment
+.
+Bundles
+●	and
+add-ons
+(e.g. a course + its test series at a combined price).
+Facets
+●	for filtering: exam, category, medium, language, validity, format, price band, and rating.
+8.3 Cart and checkout
+Guest cart persisted by cookie/session and merged into the account cart on login. Cart shows line items, quantity, discounts applied, coupon field, tax, total, and estimated EMI. Checkout collects billing details (name, email, mobile, address with GST fields if a business invoice is needed), chooses the payment method, presents the terms, and then hands off to the gateway. Support "Buy Now" (skip the cart) because the reference uses exactly that pattern.
+8.4 Payments
+●	Integrate at least one Indian gateway that supports
+cards, netbanking, UPI, wallets and EMI
+, plus an international card path. Structure the integration behind a payment-provider interface so a second gateway can be added without rewriting checkout (a fallback gateway for failed payments materially improves conversion).
+Webhook-first status:
+●	order status is driven by a signature-verified server webhook, with reconciliation polling as a fallback. Handle
+pending
+,
+authorized
+,
+captured
+,
+failed
+,
+cancelled
+,
+refunded
+, and
+partially_refunded
+.
+Failure UX:
+●	clear, non-technical failure messages mapped from gateway codes, an immediate retry with a different method, and a "payment in progress" state that does not double-charge.
+Offline/manual payments:
+●	a staff-side flow to record cash (at the office), bank transfer, demand draft or cheque against an order, with an uploaded proof document, a reference number, and an approval step. The reference documents exactly these three offline channels, so this is required.
+EMI:
+●	configure plans; display the monthly amount and the total payable on the product page; generate an instalment schedule on purchase; send reminders before each due date; and provide a self-service
+"Pay the next instalment"
+page (see 6.5).
+Refunds:
+●	full and partial, with a reason code, a mandatory approval, gateway-refund execution, a credit note, and automatic entitlement revocation where appropriate.
+Reconciliation:
+●	a daily report matching gateway settlement files to orders, surfacing unmatched or amount-mismatched transactions.
+Invoices:
+●	sequential numbering, legally required fields, tax breakup, a downloadable PDF, and a resend action.
+Tax:
+●	configurable GST rates with HSN/SAC mapping per product type, inclusive/exclusive pricing, and per-state place-of-supply rules for physical goods.
+Shipping (physical goods):
+●	zones and charges, free-shipping thresholds, courier integration with AWB tracking, shipment status notifications, delivery confirmation, returns/RMA with a pickup flow, and a refund-on-return path.
+8.5 Discounting and campaigns
+Coupons (percentage or flat, with usage caps, per-user caps, first-purchase-only, product/category scoping, and expiry), scheduled sale campaigns with an automatic storefront banner and countdown, student/scholarship pricing (the reference has a distinct "Drishti Students" price tier of ₹4,000 versus ₹5,000 for others — so implement a price tier per audience segment), and reference/partner codes. Every discount must be visible in the admin revenue reports as discount leakage.
+8.6 Conversion optimisation requirements
+Because the whole point of the content portal is to convert readers into buyers, implement and measure: contextual CTAs injected into relevant articles (e.g. an article about a topic cross-sells the matching test series), exit-intent of

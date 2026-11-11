@@ -1,0 +1,85 @@
+PART 18 — PHASED BUILD PLAN
+Build in this order. At the end of each phase, deliver: migrations and seeders, a route list, tests, and a short demo script.
+Phase 0 — Foundations (1 unit of work) Repository, environment configuration, container setup, CI (lint + tests + static analysis), error tracking, structured logging, base layout and design tokens, the design-system component library, authentication scaffolding (password + OTP + Google), RBAC tables and middleware, the admin shell with navigation and audit logging, i18n scaffolding with two locales, and a seeded demo dataset.
+Phase 1 — Content CMS and public portal (the largest phase) Content types and taxonomy; the article editor with revisions, scheduling and preview; the translation group and translation queue; the media library with automatic derivatives; the list/detail templates with archive filters, calendar, pagination and sort; menus, footer, top strip, ticker and promo slots; the homepage slot builder; redirect manager; SEO fields and sitemaps; RSS/Atom; comments; search; downloads centre; toppers; centre pages; and the reusable lead-capture component. Seed all 34 content types from Part 4.5 with at least 20 items each.
+Phase 2 — Quiz engine and free tests Question bank with all question types and bulk import; quiz categories and sets; version sets; the full attempt experience (timer, palette, mark-for-review, autosave, resume, auto-submit); scoring with negative marking; the result screen with section and topic analytics; question challenges; answer-key scheduling; and per-cell crawlable quiz listings.
+Phase 3 — Commerce and LMS Product catalogue with variants, price tiers and campaigns; cart and checkout; gateway integration with webhooks, refunds and reconciliation; invoices; EMI with the self-service next-instalment flow; orders and entitlements; courses, batches and lessons; the video player with watch-progress and watermarking; the student dashboard (all modules in Part 5.2); live classes; and offline/manual payment recording plus offline test score entry.
+Phase 4 — Test series, analytics and CRM Paid test-series packaging and scheduling; online and offline test operations with seat allocation and admit cards; rank computation with normalisation; the full analytics suite for students and admins (including mis-key detection); evaluated answer copies; the CRM pipeline with assignment rules and follow-up tasks; counselling slot booking; interview/DAF and mock-interview booking; webinar and open-mock-test registration; support ticketing; and careers plus faculty/content-writer registration.
+Phase 5 — Growth, notifications and reporting Notification templates and campaigns across email, SMS, WhatsApp, web push and in-app; the preference centre; report suite with scheduling and export; funnels and conversion dashboards; contextual CTAs and cross-sell modules; abandoned-cart and abandoned-lead sequences; A/B testing of homepage slots and pricing pages; referral and scholarship codes; and the accessibility remediation pass.
+Phase 6 — Hardening and launch Load tests on the article-read and test-attempt paths; security review against Part 14.2 with fixes; accessibility audit against WCAG 2.2 AA; Core Web Vitals tuning against Part 14.1; backup/restore drill; disaster-recovery runbook; data-integrity checks; redirect-map verification; sitemap and structured-data validation; analytics verification; and an operational runbook for the editorial and support teams.
+ 
+PART 19 — ACCEPTANCE CRITERIA AND QA CHECKLIST
+A phase is complete only when every criterion in it passes.
+Content & CMS
+●	An editor can author, translate, schedule and publish a bilingual article without developer help, and the correct translation link,
+hreflang
+, sitemap entry and feed item appear automatically.
+●	The daily production board shows all daily slots with per-language status, and a gap-warning fires on a missed slot.
+●	Every piece of text, link, image, price, phone number and policy on the public site is editable in the admin.
+●	Bulk import of 10,000 articles and 50,000 questions completes, reports errors per row, and is resumable.
+●	Changing a published slug creates a working 301 automatically.
+Public site correctness
+●	A non-existent URL returns HTTP 404.
+●	Article pages return full text in the initial HTML with JavaScript disabled.
+●	Every article has valid
+Article
++
+BreadcrumbList
+JSON-LD, a per-article OG image, self-canonical, and reciprocal
+hreflang
+.
+●	The sitemap index validates, includes
+lastmod
+, and is referenced from
+robots.txt
+.
+●	The RSS feed validates and matches the homepage ticker items.
+●	The archive calendar renders real per-day links and every filter state is in the URL.
+●	Every link in the mega-menu, footer and ticker returns 200; an automated link checker is part of CI.
+Quiz engine
+●	A student can start a timed quiz, lose connectivity for two minutes, refresh the browser, and resume with the correct remaining time and all answers intact.
+●	The server auto-submits an expired attempt even if the browser was closed.
+●	Scores, negative marking and section/topic analytics match hand-calculated expected values on a fixture set.
+●	A challenge to a question, when accepted, recomputes marks and ranks for all affected students and logs the change.
+●	Question-level facility and discrimination metrics are available and mis-keys are flagged.
+Commerce
+●	A purchase completes end-to-end in test mode, grants the entitlement immediately, produces a sequential GST invoice, and emails it.
+●	A duplicate payment webhook does not create a second order or a second entitlement.
+●	A refund revokes access, issues a credit note, and appears in the reconciliation report.
+●	Price tampering in the browser cannot change the amount charged.
+●	The next-EMI self-service payment flow works for instalments 2, 3 and 4.
+●	An offline cash payment can be recorded, approved and reconciled by finance.
+CRM
+●	A lead from any source lands in the pipeline with its source page and UTM parameters, and is auto-assigned.
+●	A counsellor can book a counselling session into a real slot, and double booking is impossible.
+●	A counselling booking, webinar registration and mock-test registration each produce a confirmation, a reminder and an attendance record.
+Security, performance, accessibility
+●	Security headers present; session cookie is
+Secure
+,
+HttpOnly
+and
+SameSite
+; CORS is an allowlist.
+●	Rate limits and CAPTCHA are enforced server-side on auth, OTP, lead and download endpoints.
+●	The audit log records every privileged action with before/after state and is append-only.
+●	Core Web Vitals targets from Part 14.1 are met on a throttled mobile profile, reported as numbers.
+●	An article page loads ≤ 6 third-party scripts, all deferred, and no YouTube iframe before user interaction.
+●	A keyboard-only user can complete: navigate the mega-menu, read an article, start and submit a quiz, and complete a purchase.
+●	Automated accessibility checks in CI show zero critical violations; the site passes pinch-zoom and contrast checks.
+●	Load test on the test-attempt path holds the target concurrency without errors or lost autosaves.
+ 
+PART 20 — YOUR FIRST RESPONSE
+Produce, in this order:
+Architecture decision record
+1. — the content/LMS split (Option 1 or Option 2 from Part 2.2) with your reasoning; confirmation of the stack; and your list of
+deferred items
+with justification.
+The complete file/route tree
+2. for Phase 0 and Phase 1 only.
+The database migrations
+3. for the foundational tables (users, roles/permissions, languages, content types, sections, articles, article_sections, media, revisions, redirects, navigation, homepage slots, downloads, leads, audit logs).
+The RBAC seeder
+4. with the full role list and permission matrix from Part 3.2.
+Working code
+5. for: the base layout with the utility strip, ticker, mega-menu (crawlable) and footer; the article detail template with t
